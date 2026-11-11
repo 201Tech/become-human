@@ -1,6 +1,6 @@
 {
   "name": "become-human",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "MCP server that makes any agent work with and for humans",
   "license": "MIT",
   "bin": {
@@ -15,10 +15,11 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run clean && tsc",
     "prepare": "npm run build",
     "start": "node dist/index.js",
-    "test": "jest"
+    "test": "jest",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\""
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
@@ -30,5 +31,23 @@
     "jest": "^30.5.2",
     "ts-jest": "^29.4.15",
     "typescript": "^5.9.3"
-  }
+  },
+  "author": "Daniel Machado",
+  "mcpName": "io.github.DanielDDHM/become-human",
+  "homepage": "https://github.com/DanielDDHM/become-human#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DanielDDHM/become-human.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DanielDDHM/become-human/issues"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "ai-agent",
+    "human-in-the-loop",
+    "claude",
+    "memory"
+  ]
 }

@@ -28,15 +28,15 @@ Claude Code, Codex, Cursor, Gemini CLI and others.
 Run it **once per computer**. From then on your agent starts it by itself, every session.
 
 ```bash
-claude mcp add become-human --scope user -- npx -y github:DanielDDHM/BecomeHuman
+claude mcp add become-human --scope user -- npx -y become-human
 ```
 
 <details>
 <summary>Codex, Gemini CLI, Cursor and others</summary>
 
 ```bash
-codex mcp add become-human -- npx -y github:DanielDDHM/BecomeHuman
-gemini mcp add -s user become-human npx -y github:DanielDDHM/BecomeHuman
+codex mcp add become-human -- npx -y become-human
+gemini mcp add -s user become-human npx -y become-human
 ```
 
 For Cursor, Windsurf, Claude Desktop and any other agent, add this to its MCP config:
@@ -46,7 +46,7 @@ For Cursor, Windsurf, Claude Desktop and any other agent, add this to its MCP co
   "mcpServers": {
     "become-human": {
       "command": "npx",
-      "args": ["-y", "github:DanielDDHM/BecomeHuman"]
+      "args": ["-y", "become-human"]
     }
   }
 }
@@ -99,7 +99,7 @@ Not sure where they are? Ask your agent: *"where is my data?"*
 To pass a setting to Claude Code, add `-e` when installing:
 
 ```bash
-claude mcp add become-human --scope user -e BECOME_HUMAN_LANG=pt -- npx -y github:DanielDDHM/BecomeHuman
+claude mcp add become-human --scope user -e BECOME_HUMAN_LANG=pt -- npx -y become-human
 ```
 
 ## Contributing

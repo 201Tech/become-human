@@ -14,7 +14,7 @@ import { registerMapTools } from "./tools/mapTools";
 import { registerProfileTools } from "./tools/profileTools";
 import { text } from "./tools/text";
 
-const SERVER_INFO = { name: "become-human", version: "0.5.0" };
+const SERVER_INFO = { name: "become-human", version: "0.6.0" };
 
 export interface ServerOptions {
   rules?: string;
