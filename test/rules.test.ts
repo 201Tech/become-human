@@ -1,8 +1,8 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { loadRules } from "../src/rules";
+import { tempFolder } from "./helpers";
 
 describe("loadRules", () => {
   it("loads the bundled rules", () => {
@@ -13,13 +13,13 @@ describe("loadRules", () => {
   });
 
   it("trims surrounding whitespace from a custom file", () => {
-    const folder = mkdtempSync(join(tmpdir(), "become-human-"));
-    const filePath = join(folder, "rules.md");
+    const folder = tempFolder();
+    const filePath = join(folder.path, "rules.md");
     writeFileSync(filePath, "\n  Be kind.  \n\n");
 
     expect(loadRules(filePath)).toBe("Be kind.");
 
-    rmSync(folder, { recursive: true });
+    folder.remove();
   });
 
   it("fails when the file does not exist", () => {

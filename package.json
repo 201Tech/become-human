@@ -1,6 +1,6 @@
 {
   "name": "become-human",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server that makes any agent work with and for humans",
   "license": "MIT",
   "bin": {
@@ -8,7 +8,8 @@
   },
   "files": [
     "dist",
-    "rules"
+    "rules",
+    "art"
   ],
   "engines": {
     "node": ">=20"
@@ -20,7 +21,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.32.2"
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
