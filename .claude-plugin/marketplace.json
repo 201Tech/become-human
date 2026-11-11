@@ -1,0 +1,12 @@
+{
+  "name": "become-human",
+  "description": "Agents that work with and for humans",
+  "owner": { "name": "Daniel Machado" },
+  "plugins": [
+    {
+      "name": "become-human",
+      "source": "./plugin",
+      "description": "Your AI agent, working with you: learns how you work, remembers each project and lets you lead."
+    }
+  ]
+}

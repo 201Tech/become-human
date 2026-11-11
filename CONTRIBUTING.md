@@ -96,6 +96,18 @@ Lines added by hand may skip the icon and the id: they become ideas with new ids
 | `src/server.ts` | MCP server: instructions and tools |
 | `src/index.ts` | Entry point: banner for people, stdio for agents |
 
+## Releasing (maintainer)
+
+1. Bump the version in `package.json`, `server.json` (both fields) and `plugin/.claude-plugin/plugin.json`.
+2. `npm publish --access public` from a regular terminal (2FA in the browser).
+3. `mcp-publisher publish` to update the [MCP Registry](https://registry.modelcontextprotocol.io).
+
+| Path | Used by |
+| --- | --- |
+| `server.json` | MCP Registry |
+| `.claude-plugin/marketplace.json` | Claude Code marketplace (`/plugin marketplace add`) |
+| `plugin/` | The Claude Code plugin: starts the npm package as an MCP server |
+
 ## Commits
 
 Small, focused commits with conventional prefixes (`feat:`, `fix:`, `docs:`).

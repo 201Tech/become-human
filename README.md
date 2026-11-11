@@ -27,6 +27,15 @@ Claude Code, Codex, Cursor, Gemini CLI and others.
 
 Run it **once per computer**. From then on your agent starts it by itself, every session.
 
+**Claude Code**, as a plugin (inside a session):
+
+```
+/plugin marketplace add DanielDDHM/become-human
+/plugin install become-human@become-human
+```
+
+Or as an MCP server, which also lets you pass [settings](#make-it-yours):
+
 ```bash
 claude mcp add become-human --scope user -- npx -y become-human
 ```

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.DanielDDHM/become-human",
+  "description": "Your AI agent, working with you: learns how you work, remembers each project, lets you lead.",
+  "repository": {
+    "url": "https://github.com/DanielDDHM/become-human",
+    "source": "github"
+  },
+  "version": "0.6.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "become-human",
+      "version": "0.6.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        { "name": "BECOME_HUMAN_LANG", "description": "Language of your files: en or pt", "isRequired": false, "format": "string", "isSecret": false },
+        { "name": "BECOME_HUMAN_HOME", "description": "Folder for your profile, rules and maps", "isRequired": false, "format": "string", "isSecret": false },
+        { "name": "BECOME_HUMAN_PROFILE_LIMIT", "description": "Maximum facts kept in your profile", "isRequired": false, "format": "number", "isSecret": false }
+      ]
+    }
+  ]
+}

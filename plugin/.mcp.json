@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "become-human": {
+      "command": "npx",
+      "args": ["-y", "become-human"]
+    }
+  }
+}
