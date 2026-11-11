@@ -1,4 +1,5 @@
-import { basename } from "node:path";
+import { readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
@@ -14,7 +15,8 @@ import { registerMapTools } from "./tools/mapTools";
 import { registerProfileTools } from "./tools/profileTools";
 import { text } from "./tools/text";
 
-const SERVER_INFO = { name: "become-human", version: "0.6.0" };
+const { name, version } = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf8"));
+const SERVER_INFO: { name: string; version: string } = { name, version };
 
 export interface ServerOptions {
   rules?: string;

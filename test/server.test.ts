@@ -47,6 +47,12 @@ describe("BecomeHuman MCP server", () => {
     return client;
   }
 
+  it("announces the package version", () => {
+    const { version } = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf8"));
+
+    expect(client.getServerVersion()).toEqual({ name: "become-human", version });
+  });
+
   it("sends rules and an empty profile as instructions", () => {
     expect(client.getInstructions()).toBe(
       `${RULES}\n\n## What you already know about your operator\n\nNothing learned yet. Learn as you go.`,
