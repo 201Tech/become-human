@@ -73,7 +73,9 @@ Change the folder with the `BECOME_HUMAN_HOME` environment variable.
 
 ## Install
 
-Requires Node.js 20 or newer. `npx` fetches it from GitHub.
+Run it **once per machine**. From then on the agent starts BecomeHuman by itself in every session,<br>
+loads what it knows about you and the current project's map, and updates from GitHub when online.<br>
+Requires Node.js 20 or newer.
 
 **Claude Code**
 

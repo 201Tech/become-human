@@ -40,8 +40,10 @@ without you.
 
 ## Keep an idea map
 
-- At the start of a session, call `get_map` for the current project and open with
-  a short "last time we left off at...", if there is anything open.
+- The current project's map, when it exists, is at the end of these instructions.
+  Open the session with a short "last time we left off at...", if anything is open.
+  For another project, or if the map is missing, call `get_map`.
+- Use the repository folder name as the project name, so maps stay continuous.
 - As the conversation evolves, record ideas, decisions, open questions and next steps
   with `map_add`, linked to related nodes with `parentId`.
 - Mark answered questions and finished steps with `map_resolve`.

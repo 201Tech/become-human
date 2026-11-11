@@ -10,7 +10,7 @@ async function connect(folder: string): Promise<Client> {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test-client", version: "1.0.0" });
 
-  await createServer({ rules: RULES, folder }).connect(serverTransport);
+  await createServer({ rules: RULES, folder, project: "demo" }).connect(serverTransport);
   await client.connect(clientTransport);
 
   return client;
@@ -75,6 +75,27 @@ describe("BecomeHuman MCP server", () => {
     const nextSession = await connect(folder.path);
 
     expect(nextSession.getInstructions()).toContain("1. [tone] Short answers");
+
+    await nextSession.close();
+  });
+
+  it("brings the current project's map into the next session", async () => {
+    await call(client, "map_add", { project: "demo", kind: "next", text: "Ship v0.3" });
+
+    const nextSession = await connect(folder.path);
+
+    expect(nextSession.getInstructions()).toContain("## Current project: demo");
+    expect(nextSession.getInstructions()).toContain("- #1 Ship v0.3");
+
+    await nextSession.close();
+  });
+
+  it("leaves other projects' maps out of the instructions", async () => {
+    await call(client, "map_add", { project: "other", kind: "next", text: "Elsewhere" });
+
+    const nextSession = await connect(folder.path);
+
+    expect(nextSession.getInstructions()).not.toContain("Elsewhere");
 
     await nextSession.close();
   });
