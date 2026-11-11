@@ -2,7 +2,7 @@ import { basename } from "node:path";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { dataDir, language } from "./config";
+import { dataDir, language, profileLimit } from "./config";
 import { writeIfMissing } from "./files";
 import { Language, labels as labelsFor } from "./i18n";
 import { IdeaMaps } from "./ideaMap/ideaMap";
@@ -14,13 +14,14 @@ import { registerMapTools } from "./tools/mapTools";
 import { registerProfileTools } from "./tools/profileTools";
 import { text } from "./tools/text";
 
-const SERVER_INFO = { name: "become-human", version: "0.4.0" };
+const SERVER_INFO = { name: "become-human", version: "0.5.0" };
 
 export interface ServerOptions {
   rules?: string;
   folder?: string;
   project?: string;
   lang?: Language;
+  limit?: number;
 }
 
 export function createServer({
@@ -28,6 +29,7 @@ export function createServer({
   folder = dataDir(),
   project = basename(process.cwd()),
   lang = language(),
+  limit = profileLimit(),
 }: ServerOptions = {}): McpServer {
   const labels = labelsFor(lang);
   const paths = dataPaths(folder);
@@ -48,16 +50,11 @@ export function createServer({
 
   server.registerTool(
     "get_rules",
-    {
-      title: "Human-first working rules",
-      description:
-        "Returns the rules for working with and for a human partner. " +
-        "Read them before starting a task and whenever unsure how to proceed.",
-    },
+    { description: "Reread the rules for working with your human." },
     async () => text(rules),
   );
 
-  registerProfileTools(server, profile, labels);
+  registerProfileTools(server, { profile, labels, limit });
   registerMapTools(server, maps);
   registerDataTools(server, paths);
 
@@ -71,7 +68,7 @@ function personalRules(filePath: string): string[] {
 }
 
 function currentMap(maps: IdeaMaps, project: string): string[] {
-  const hasIdeas = maps.load(project).nodes.length > 0;
+  const openItems = maps.openItems(project);
 
-  return hasIdeas ? [`## Current project: ${project}`, maps.render(project)] : [];
+  return openItems ? [openItems] : [];
 }

@@ -1,65 +1,91 @@
 import { join } from "node:path";
 
-import { readText, writeText } from "../files";
-import { parseMap, serializeMap } from "./markdown";
+import { readLines, writeLines } from "../lines";
+import { insertionLine, LocatedNode, nodeLine, parseNodes, stampMissingIds } from "./markdown";
 import { toSlug } from "./slug";
 import { summarize } from "./summary";
 import { IdeaMapData, IdeaNode, NewIdea } from "./types";
 
 const LINE_BREAKS = /\s*\n\s*/g;
+const UNCHECKED = "- [ ]";
+const CHECKED = "- [x]";
 
+// Writes touch only the lines that change, so anything the human wrote stays in place.
 export class IdeaMaps {
   constructor(private readonly folder: string) {}
 
   load(project: string): IdeaMapData {
-    return parseMap(project, readText(this.filePath(project)) ?? "");
+    const nodes = parseNodes(this.read(project)).map(toIdeaNode);
+
+    return { project, nodes };
   }
 
   add(project: string, idea: NewIdea): IdeaNode {
-    const map = this.load(project);
-
-    if (idea.parentId !== undefined) findNode(map, idea.parentId);
+    const lines = this.read(project);
+    const nodes = parseNodes(lines);
+    const parent = idea.parentId === undefined ? undefined : findNode(project, nodes, idea.parentId);
 
     const node: IdeaNode = {
       ...idea,
-      id: Math.max(0, ...map.nodes.map((current) => current.id)) + 1,
+      id: Math.max(0, ...nodes.map((current) => current.id)) + 1,
       text: idea.text.trim().replace(LINE_BREAKS, " "),
       resolved: idea.kind === "decision",
     };
 
-    this.save({ ...map, nodes: [...map.nodes, node] });
+    stampMissingIds(lines, nodes);
+
+    if (nodes.length === 0) lines.push("");
+
+    const depth = parent ? parent.depth + 1 : 0;
+
+    lines.splice(insertionLine(lines, nodes, parent), 0, nodeLine(node, depth));
+    writeLines(this.filePath(project), lines);
 
     return node;
   }
 
   resolve(project: string, id: number): IdeaNode {
-    const map = this.load(project);
-    const node = { ...findNode(map, id), resolved: true };
+    const lines = this.read(project);
+    const nodes = parseNodes(lines);
+    const node = findNode(project, nodes, id);
 
-    this.save({ ...map, nodes: map.nodes.map((current) => (current.id === id ? node : current)) });
+    stampMissingIds(lines, nodes);
+    lines[node.line] = lines[node.line].replace(UNCHECKED, CHECKED);
+    writeLines(this.filePath(project), lines);
 
-    return node;
+    return { ...toIdeaNode(node), resolved: true };
   }
 
   render(project: string): string {
-    const map = this.load(project);
+    const lines = this.read(project);
 
-    return `${serializeMap(map)}\n${summarize(map.nodes)}`;
+    return `${lines.join("\n")}\n\n${summarize(parseNodes(lines))}`;
+  }
+
+  openItems(project: string): string | undefined {
+    const nodes = this.load(project).nodes;
+    const hasOpen = nodes.some((node) => !node.resolved);
+
+    return hasOpen ? summarize(nodes, `## Where we left off in ${project}`) : undefined;
   }
 
   filePath(project: string): string {
     return join(this.folder, `${toSlug(project)}.md`);
   }
 
-  private save(map: IdeaMapData): void {
-    writeText(this.filePath(map.project), serializeMap(map));
+  private read(project: string): string[] {
+    return readLines(this.filePath(project)) ?? [`# ${project}`];
   }
 }
 
-function findNode(map: IdeaMapData, id: number): IdeaNode {
-  const node = map.nodes.find((current) => current.id === id);
+function findNode(project: string, nodes: LocatedNode[], id: number): LocatedNode {
+  const node = nodes.find((current) => current.id === id);
 
-  if (!node) throw new Error(`Idea #${id} does not exist in "${map.project}"`);
+  if (!node) throw new Error(`Idea #${id} does not exist in "${project}"`);
 
   return node;
+}
+
+function toIdeaNode({ id, kind, text, parentId, resolved }: LocatedNode): IdeaNode {
+  return parentId === undefined ? { id, kind, text, resolved } : { id, kind, text, parentId, resolved };
 }

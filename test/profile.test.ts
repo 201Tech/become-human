@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { formatProfile, parseProfile, Profile } from "../src/profile/profile";
+import { formatProfile, Profile } from "../src/profile/profile";
 import { tempFolder } from "./helpers";
 
 const TITLE = "What I learned about you";
@@ -19,6 +19,8 @@ describe("Profile", () => {
 
   afterEach(() => folder.remove());
 
+  const file = () => readFileSync(filePath, "utf8");
+
   it("is empty when no file exists", () => {
     expect(profile.list()).toEqual([]);
   });
@@ -28,7 +30,7 @@ describe("Profile", () => {
     profile.add({ topic: "Tone", fact: "Short answers" });
     profile.add({ topic: "Code", fact: "Early returns" });
 
-    expect(readFileSync(filePath, "utf8")).toBe(
+    expect(file()).toBe(
       [
         "# What I learned about you",
         "",
@@ -43,56 +45,59 @@ describe("Profile", () => {
     );
   });
 
-  it("numbers facts in the order they appear in the file", () => {
-    profile.add({ topic: "Code", fact: "A" });
-    profile.add({ topic: "Tone", fact: "B" });
-    profile.add({ topic: "Code", fact: "C" });
+  it("keeps everything the human wrote by hand when adding", () => {
+    writeFileSync(filePath, "# Me\n\nA note about me.\n\n## code\n- Uses Jest\n\nloose text\n\n## Pets\n- Two cats\n");
 
-    expect(profile.list().map((entry) => entry.fact)).toEqual(["A", "C", "B"]);
+    profile.add({ topic: "Code", fact: "Early returns" });
+
+    expect(file()).toBe(
+      "# Me\n\nA note about me.\n\n## code\n- Uses Jest\n\nloose text\n- Early returns\n\n## Pets\n- Two cats\n",
+    );
   });
 
-  it("keeps topics the human created by hand", () => {
-    writeFileSync(filePath, "# Me\n\n## Personal\n- Has two cats\n");
+  it("knows a fact it already has, ignoring case", () => {
     profile.add({ topic: "Code", fact: "Uses Jest" });
 
-    expect(profile.list()).toEqual([
-      { topic: "Personal", fact: "Has two cats" },
-      { topic: "Code", fact: "Uses Jest" },
-    ]);
+    expect(profile.has({ topic: "code", fact: "uses jest" })).toBe(true);
+    expect(profile.has({ topic: "Code", fact: "Uses Vitest" })).toBe(false);
   });
 
-  it("forgets a fact by its number", () => {
-    profile.add({ topic: "Tone", fact: "A" });
-    profile.add({ topic: "Tone", fact: "B" });
+  it("forgets the single fact that matches the words given", () => {
+    profile.add({ topic: "Tone", fact: "Short answers" });
+    profile.add({ topic: "Code", fact: "Uses Jest" });
 
-    expect(profile.forget(1)).toEqual({ topic: "Tone", fact: "A" });
-    expect(profile.list()).toEqual([{ topic: "Tone", fact: "B" }]);
+    expect(profile.forget("jest")).toEqual({
+      removed: { topic: "Code", fact: "Uses Jest" },
+      matches: [{ topic: "Code", fact: "Uses Jest" }],
+    });
+    expect(profile.list()).toEqual([{ topic: "Tone", fact: "Short answers" }]);
   });
 
-  it("returns nothing when forgetting a number that does not exist", () => {
-    profile.add({ topic: "Tone", fact: "A" });
+  it("removes nothing when several facts match", () => {
+    profile.add({ topic: "Code", fact: "Uses Jest" });
+    profile.add({ topic: "Code", fact: "Uses tabs" });
 
-    expect(profile.forget(5)).toBeUndefined();
-    expect(profile.list()).toHaveLength(1);
+    expect(profile.forget("uses").removed).toBeUndefined();
+    expect(profile.forget("uses").matches).toHaveLength(2);
+    expect(profile.list()).toHaveLength(2);
   });
-});
 
-describe("parseProfile", () => {
-  it("accepts * bullets and ignores text outside topics", () => {
-    const content = "# Title\n\nintro text\n- loose bullet\n\n## Code\n* Uses Jest\nnote\n";
+  it("removes nothing when no fact matches", () => {
+    profile.add({ topic: "Code", fact: "Uses Jest" });
 
-    expect(parseProfile(content)).toEqual([{ topic: "Code", fact: "Uses Jest" }]);
+    expect(profile.forget("python")).toEqual({ matches: [] });
   });
 });
 
 describe("formatProfile", () => {
-  it("numbers each fact with its topic", () => {
+  it("writes one compact line per topic", () => {
     const entries = [
       { topic: "Code", fact: "Uses Jest" },
       { topic: "Tone", fact: "Direct" },
+      { topic: "Code", fact: "Early returns" },
     ];
 
-    expect(formatProfile(entries)).toBe("1. [Code] Uses Jest\n2. [Tone] Direct");
+    expect(formatProfile(entries)).toBe("Code: Uses Jest; Early returns\nTone: Direct");
   });
 
   it("invites learning when empty", () => {

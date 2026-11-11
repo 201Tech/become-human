@@ -48,7 +48,7 @@ sequenceDiagram
 
     A->>B: initialize (started by the agent, in the project folder)
     B->>F: read profile.md, my-rules.md, maps/<project>.md
-    B-->>A: instructions: rules + own rules + profile + current map
+    B-->>A: instructions: rules + own rules + profile + open items
     A-->>H: "Last time we left off at..."
     H->>A: Asks, decides, corrects
     A->>B: remember / map_add / map_resolve
@@ -58,19 +58,22 @@ sequenceDiagram
 
 The MCP `instructions` field carries everything the agent needs on connect,
 so continuity does not depend on the agent remembering to call a tool.
+It is kept small on purpose: compact rules, one line per profile topic, and only the
+open items of the current project. The full map is one `get_map` call away.
 
 ## Tools
 
 | Tool | What it does |
 | --- | --- |
 | `get_rules` | Reread the human-first rules |
-| `remember` / `forget` / `get_profile` | Learn, unlearn and list facts about the operator |
+| `remember` / `forget` / `get_profile` | Learn, unlearn (by its words) and list facts about the operator |
 | `get_map` / `map_add` / `map_resolve` | Read and grow a project's idea map |
 | `where_is_my_data` | Tell the human where their files are |
 
 ## File formats
 
 The Markdown files are the single source of truth, made for people first.
+Writes change only the lines they need: notes and anything else the human wrote stay in place.
 
 **profile.md:** one `##` heading per topic, one `-` bullet per fact.
 

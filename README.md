@@ -84,7 +84,8 @@ Everything stays on your computer, in a folder you can open: **`~/BecomeHuman`**
 | `my-rules.md` | Your own rules for every agent |
 | `maps/<project>.md` | One checklist per project: ideas, decisions, questions, next steps |
 
-They are plain text. Read them, fix them, delete lines: the agent follows what is there.
+They are plain text. Read them, fix them, add notes: the agent follows what is there
+and never erases what you wrote.
 Not sure where they are? Ask your agent: *"where is my data?"*
 
 ## Make it yours
@@ -92,6 +93,7 @@ Not sure where they are? Ask your agent: *"where is my data?"*
 - **Your rules:** write them in `~/BecomeHuman/my-rules.md`, one per line. They win over the defaults.
 - **Your language:** set `BECOME_HUMAN_LANG=pt` to get your files in Portuguese (`en` is the default).
 - **Another folder:** set `BECOME_HUMAN_HOME` to keep the files elsewhere, like a synced folder.
+- **Profile size:** the agent keeps at most 50 facts and merges similar ones. Change it with `BECOME_HUMAN_PROFILE_LIMIT`.
 
 To pass a setting to Claude Code, add `-e` when installing:
 

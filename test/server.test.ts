@@ -10,11 +10,11 @@ import { tempFolder } from "./helpers";
 
 const RULES = "Work with humans.";
 
-async function connect(folder: string, lang: Language = "en"): Promise<Client> {
+async function connect(folder: string, lang: Language = "en", limit = 50): Promise<Client> {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test-client", version: "1.0.0" });
 
-  await createServer({ rules: RULES, folder, project: "demo", lang }).connect(serverTransport);
+  await createServer({ rules: RULES, folder, project: "demo", lang, limit }).connect(serverTransport);
   await client.connect(clientTransport);
 
   return client;
@@ -40,9 +40,9 @@ describe("BecomeHuman MCP server", () => {
     folder.remove();
   });
 
-  async function nextSession(lang?: Language): Promise<Client> {
+  async function nextSession(lang?: Language, limit?: number): Promise<Client> {
     await client.close();
-    client = await connect(folder.path, lang);
+    client = await connect(folder.path, lang, limit);
 
     return client;
   }
@@ -93,9 +93,37 @@ describe("BecomeHuman MCP server", () => {
     expect(await call(client, "remember", { category: "code", fact: "Uses Jest" })).toBe(
       "Learned: [Code] Uses Jest",
     );
-    expect(await call(client, "get_profile")).toBe("1. [Code] Uses Jest");
-    expect(await call(client, "forget", { number: 1 })).toBe("Forgot: Uses Jest");
-    expect(await call(client, "forget", { number: 1 })).toBe("There is no fact #1.");
+    expect(await call(client, "get_profile")).toBe("Code: Uses Jest");
+    expect(await call(client, "forget", { fact: "jest" })).toBe("Forgot: Uses Jest");
+    expect(await call(client, "forget", { fact: "jest" })).toBe('Nothing matches "jest".');
+  });
+
+  it("does not save the same fact twice", async () => {
+    await call(client, "remember", { category: "code", fact: "Uses Jest" });
+
+    expect(await call(client, "remember", { category: "code", fact: "uses jest" })).toBe(
+      "Already known: uses jest",
+    );
+  });
+
+  it("asks to be more specific when several facts match", async () => {
+    await call(client, "remember", { category: "code", fact: "Uses Jest" });
+    await call(client, "remember", { category: "code", fact: "Uses tabs" });
+
+    expect(await call(client, "forget", { fact: "uses" })).toBe(
+      "Several facts match, be more specific:\n- Uses Jest\n- Uses tabs",
+    );
+  });
+
+  it("refuses new facts when the profile is full", async () => {
+    const session = await nextSession("en", 1);
+
+    await call(session, "remember", { category: "code", fact: "Uses Jest" });
+
+    const result = await session.callTool({ name: "remember", arguments: { category: "tone", fact: "Short" } });
+
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain("Profile is full (1 facts)");
   });
 
   it("writes the profile in the configured language", async () => {
@@ -111,7 +139,7 @@ describe("BecomeHuman MCP server", () => {
   it("brings learned facts into the next session", async () => {
     await call(client, "remember", { category: "tone", fact: "Short answers" });
 
-    expect((await nextSession()).getInstructions()).toContain("1. [Tone] Short answers");
+    expect((await nextSession()).getInstructions()).toContain("Tone: Short answers");
   });
 
   it("rejects an unknown category", async () => {
@@ -135,10 +163,12 @@ describe("BecomeHuman MCP server", () => {
   it("brings the current project's map into the next session", async () => {
     await call(client, "map_add", { project: "demo", kind: "next", text: "Ship v0.4" });
 
+    await call(client, "map_add", { project: "demo", kind: "decision", text: "Use Markdown" });
+
     const instructions = (await nextSession()).getInstructions();
 
-    expect(instructions).toContain("## Current project: demo");
-    expect(instructions).toContain("- #1 Ship v0.4");
+    expect(instructions).toContain("## Where we left off in demo\n\n### Next steps\n\n- #1 Ship v0.4");
+    expect(instructions).not.toContain("Use Markdown");
   });
 
   it("leaves other projects' maps out of the instructions", async () => {

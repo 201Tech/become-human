@@ -5,11 +5,11 @@ const OPEN_SECTIONS: { kind: NodeKind; title: string }[] = [
   { kind: "question", title: "Open questions" },
 ];
 
-export function summarize(nodes: IdeaNode[]): string {
+export function summarize(nodes: IdeaNode[], title = "## Where we left off"): string {
   const open = nodes.filter((node) => !node.resolved);
-  const sections = OPEN_SECTIONS.flatMap(({ kind, title }) => section(title, open, kind));
+  const sections = OPEN_SECTIONS.flatMap(({ kind, title: sectionTitle }) => section(sectionTitle, open, kind));
 
-  return ["## Where we left off", ...(sections.length > 0 ? sections : ["Nothing open."])].join("\n\n");
+  return [title, ...(sections.length > 0 ? sections : ["Nothing open."])].join("\n\n");
 }
 
 function section(title: string, nodes: IdeaNode[], kind: NodeKind): string[] {
