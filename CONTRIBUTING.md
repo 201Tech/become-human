@@ -20,6 +20,10 @@ flowchart LR
     M -->|npx installs| U[everyone]
 ```
 
+**Personal data never comes to this repository.** Profiles, personal rules and idea maps
+belong to each operator and stay on their computer. They are ignored by git, and pull
+requests that include them are closed.
+
 Both branches are protected: no direct pushes, no force pushes, no deletion,
 and every pull request needs an approved review from the code owner.
 

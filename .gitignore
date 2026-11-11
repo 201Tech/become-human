@@ -1,2 +1,7 @@
 node_modules
 dist
+
+# Personal data: every operator's profile, rules and maps stay on their own computer
+profile.md
+my-rules.md
+maps/
