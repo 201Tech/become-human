@@ -1,5 +1,28 @@
 # Contributing
 
+Thanks for helping agents work better with humans.
+
+## How to send a change
+
+1. Fork the repository and create a branch from **`develop`**.
+2. Make a small, focused change with tests.
+3. Open a pull request **to `develop`**. Pull requests to `main` are closed.
+4. The maintainer ([@DanielDDHM](https://github.com/DanielDDHM)) reviews it.
+   Nothing is merged without that review.
+
+`main` is the stable version everyone installs. It only receives `develop`,
+merged by the maintainer when a release is ready.
+
+```mermaid
+flowchart LR
+    F[your branch] -->|pull request + review| D[develop]
+    D -->|release by the maintainer| M[main]
+    M -->|npx installs| U[everyone]
+```
+
+Both branches are protected: no direct pushes, no force pushes, no deletion,
+and every pull request needs an approved review from the code owner.
+
 ## Run it
 
 ```bash
