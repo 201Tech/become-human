@@ -10,3 +10,7 @@ export function writeText(filePath: string, content: string): void {
   mkdirSync(dirname(filePath), { recursive: true });
   writeFileSync(filePath, content);
 }
+
+export function writeIfMissing(filePath: string, content: string): void {
+  if (!existsSync(filePath)) writeText(filePath, content);
+}

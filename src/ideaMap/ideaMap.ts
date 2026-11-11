@@ -1,20 +1,18 @@
 import { join } from "node:path";
 
 import { readText, writeText } from "../files";
-import { renderMap } from "./render";
+import { parseMap, serializeMap } from "./markdown";
 import { toSlug } from "./slug";
+import { summarize } from "./summary";
 import { IdeaMapData, IdeaNode, NewIdea } from "./types";
 
+const LINE_BREAKS = /\s*\n\s*/g;
+
 export class IdeaMaps {
-  constructor(
-    private readonly folder: string,
-    private readonly now: () => Date = () => new Date(),
-  ) {}
+  constructor(private readonly folder: string) {}
 
   load(project: string): IdeaMapData {
-    const content = readText(this.jsonPath(project));
-
-    return content ? (JSON.parse(content) as IdeaMapData) : emptyMap(project);
+    return parseMap(project, readText(this.filePath(project)) ?? "");
   }
 
   add(project: string, idea: NewIdea): IdeaNode {
@@ -24,9 +22,9 @@ export class IdeaMaps {
 
     const node: IdeaNode = {
       ...idea,
-      id: nextId(map),
-      resolved: false,
-      createdAt: this.now().toISOString(),
+      id: Math.max(0, ...map.nodes.map((current) => current.id)) + 1,
+      text: idea.text.trim().replace(LINE_BREAKS, " "),
+      resolved: idea.kind === "decision",
     };
 
     this.save({ ...map, nodes: [...map.nodes, node] });
@@ -44,27 +42,18 @@ export class IdeaMaps {
   }
 
   render(project: string): string {
-    return renderMap(this.load(project));
+    const map = this.load(project);
+
+    return `${serializeMap(map)}\n${summarize(map.nodes)}`;
+  }
+
+  filePath(project: string): string {
+    return join(this.folder, `${toSlug(project)}.md`);
   }
 
   private save(map: IdeaMapData): void {
-    const updated = { ...map, updatedAt: this.now().toISOString() };
-
-    writeText(this.jsonPath(map.project), JSON.stringify(updated, null, 2));
-    writeText(join(this.folder, `${toSlug(map.project)}.md`), renderMap(updated));
+    writeText(this.filePath(map.project), serializeMap(map));
   }
-
-  private jsonPath(project: string): string {
-    return join(this.folder, `${toSlug(project)}.json`);
-  }
-}
-
-function emptyMap(project: string): IdeaMapData {
-  return { project, updatedAt: "never", nodes: [] };
-}
-
-function nextId(map: IdeaMapData): number {
-  return Math.max(0, ...map.nodes.map((node) => node.id)) + 1;
 }
 
 function findNode(map: IdeaMapData, id: number): IdeaNode {

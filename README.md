@@ -2,100 +2,44 @@
 
 # BecomeHuman
 
-```
- _____________                                             _________
-|  _________  |_________________                __________/         \____
-| |  :::::  | |=[]=[]=[]=[]=[]=[]>   .  *  .   <(__________              \
-| |_________| |________                                 (______           |
-|   (o) (o)   |=[]=[]=[]>                                (_____           |
-|_____________|=[]=[]>                                    (____     ______/
-                                                               \___/
-      machine                                                  human
-```
+<table><tr><td><pre>
+        __________                                    __________
+ =====-'  [o] [o]  ]=[]=[]=[]=[]=[>   *   <__________(          '-=====
+                 [====]                         (______
+                 [====]                         (______
+ =====-._______[====]                            (_______.______.-=====
+              machine                                 human
+</pre></td></tr></table>
 
-An MCP server that makes any AI agent work **with and for humans**.
+**Your AI agent, working with you. Not just for you.**
 
-The agent does the hands-on work. The human watches, reads, learns and decides.<br>
-Over time the agent learns how its operator works, keeps an idea map of every project,<br>
-and becomes a real partner, on any machine and in any agent.
+[Install](#install) · [What changes](#what-changes) · [Your files](#your-files) · [Make it yours](#make-it-yours)
 
-## What the agent learns
+</div>
 
-**Do the work, keep the human in the loop:** say what and why, show small steps, report honestly.<br>
-**The human decides:** ask before choosing languages, libraries, architecture, tests or docs.<br>
-**Teach while working:** explain choices in plain language, adapt to the person.<br>
-**Learn the operator:** remember preferences and corrections, never ask twice.<br>
-**Keep an idea map:** ideas, decisions, questions and next steps, session after session.<br>
-**Be a real partner:** continuity, matching tone and pace, honest disagreement, growth.<br>
-**Code and write for people:** readable, small, typed, short and direct.
+## Why
 
-Full text: [rules/human-first.md](rules/human-first.md)
-
-## How it works
-
-```mermaid
-sequenceDiagram
-    participant H as Human
-    participant A as Agent
-    participant B as BecomeHuman
-
-    A->>B: initialize
-    B-->>A: rules + what it knows about the operator
-    A->>B: get_map(project)
-    B-->>A: ideas, open questions, next steps
-    A-->>H: "Last time we left off at..."
-    H->>A: Asks for a task
-    A-->>H: Explains the plan, asks the decisions
-    H->>A: Decides, corrects
-    A->>B: remember(fact), map_add(decision)
-    A-->>H: Does the work, says what it learned and what changed
-```
-
-| Tool | What it does |
-| :---: | :---: |
-| `get_rules` | Reread the human-first rules |
-| `remember` / `forget` | Learn or unlearn a fact about the operator |
-| `get_profile` | List what the agent knows about the operator |
-| `get_map` | Read a project's idea map |
-| `map_add` / `map_resolve` | Grow the map, close questions and steps |
-
-## Your data
-
-Everything stays on your machine, in plain files you can read and edit.
-
-| Path | Content |
-| :---: | :---: |
-| `~/.become-human/profile.md` | What the agent learned about you |
-| `~/.become-human/maps/<project>.md` | Idea map with a Mermaid mindmap |
-| `~/.become-human/maps/<project>.json` | Same map, for the agent |
-
-Change the folder with the `BECOME_HUMAN_HOME` environment variable.
+AI agents are fast, but they forget you every session, decide things you wanted to decide,
+and leave work you cannot follow. BecomeHuman fixes that in any agent that speaks MCP:
+Claude Code, Codex, Cursor, Gemini CLI and others.
 
 ## Install
 
-Run it **once per machine**. From then on the agent starts BecomeHuman by itself in every session,<br>
-loads what it knows about you and the current project's map, and updates from GitHub when online.<br>
-Requires Node.js 20 or newer.
-
-**Claude Code**
+Run it **once per computer**. From then on your agent starts it by itself, every session.
 
 ```bash
 claude mcp add become-human --scope user -- npx -y github:DanielDDHM/BecomeHuman
 ```
 
-**Codex**
+<details>
+<summary>Codex, Gemini CLI, Cursor and others</summary>
 
 ```bash
 codex mcp add become-human -- npx -y github:DanielDDHM/BecomeHuman
-```
-
-**Gemini CLI**
-
-```bash
 gemini mcp add -s user become-human npx -y github:DanielDDHM/BecomeHuman
 ```
 
-**Cursor, Windsurf, Claude Desktop and others**
+For Cursor, Windsurf, Claude Desktop and any other agent, add this to its MCP config:
 
 ```json
 {
@@ -108,26 +52,53 @@ gemini mcp add -s user become-human npx -y github:DanielDDHM/BecomeHuman
 }
 ```
 
-## Development
+</details>
+
+You only need [Node.js](https://nodejs.org) 20 or newer.
+
+## What changes
+
+> **You:** let's continue<br>
+> **Agent:** Last time we left off at #4 "add the login screen". There is also an open question:
+> email or phone? Which do you prefer?<br>
+> **You:** email, and stop using semicolons<br>
+> **Agent:** Done. Learned: you prefer code without semicolons.
+
+- **It does the work and keeps you in the loop:** what it will do, why, and what changed.
+- **You decide:** it asks before choosing languages, libraries, architecture, tests or docs.
+- **It teaches:** plain explanations, adapted to how much you already know.
+- **It learns how you work:** your preferences and corrections, so it never asks twice.
+- **It remembers each project:** ideas, decisions, open questions and next steps.
+- **It is a real partner:** matches your tone, notices when you are tired, admits mistakes,
+  disagrees with respect.
+
+Read the full rules in [rules/human-first.md](rules/human-first.md).
+
+## Your files
+
+Everything stays on your computer, in a folder you can open: **`~/BecomeHuman`**.
+
+| File | What is inside |
+| --- | --- |
+| `profile.md` | What the agent learned about you, grouped by topic |
+| `my-rules.md` | Your own rules for every agent |
+| `maps/<project>.md` | One checklist per project: ideas, decisions, questions, next steps |
+
+They are plain text. Read them, fix them, delete lines: the agent follows what is there.
+Not sure where they are? Ask your agent: *"where is my data?"*
+
+## Make it yours
+
+- **Your rules:** write them in `~/BecomeHuman/my-rules.md`, one per line. They win over the defaults.
+- **Your language:** set `BECOME_HUMAN_LANG=pt` to get your files in Portuguese (`en` is the default).
+- **Another folder:** set `BECOME_HUMAN_HOME` to keep the files elsewhere, like a synced folder.
+
+To pass a setting to Claude Code, add `-e` when installing:
 
 ```bash
-npm install   # also builds
-npm test      # unit and integration tests
-npm start     # runs the server on stdio
+claude mcp add become-human --scope user -e BECOME_HUMAN_LANG=pt -- npx -y github:DanielDDHM/BecomeHuman
 ```
 
-| Path | Responsibility |
-| :---: | :---: |
-| `rules/human-first.md` | The rules. Edit here to change behavior. |
-| `art/creation.txt` | The hands, shown when a person runs the command |
-| `src/profile/` | What the agent learns about the operator |
-| `src/ideaMap/` | Idea maps: storage and Mermaid rendering |
-| `src/tools/` | MCP tools |
-| `src/server.ts` | MCP server: instructions and tools |
-| `src/index.ts` | Entry point: banner for people, stdio for agents |
+## Contributing
 
-## License
-
-MIT
-
-</div>
+See [CONTRIBUTING.md](CONTRIBUTING.md). License: [MIT](LICENSE).

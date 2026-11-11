@@ -1,33 +1,44 @@
-import { basename, join } from "node:path";
+import { basename } from "node:path";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { dataDir } from "./config";
+import { dataDir, language } from "./config";
+import { writeIfMissing } from "./files";
+import { Language, labels as labelsFor } from "./i18n";
 import { IdeaMaps } from "./ideaMap/ideaMap";
+import { dataPaths } from "./paths";
 import { formatProfile, Profile } from "./profile/profile";
-import { loadRules } from "./rules";
+import { loadPersonalRules, loadRules } from "./rules";
+import { registerDataTools } from "./tools/dataTools";
 import { registerMapTools } from "./tools/mapTools";
 import { registerProfileTools } from "./tools/profileTools";
 import { text } from "./tools/text";
 
-const SERVER_INFO = { name: "become-human", version: "0.3.0" };
+const SERVER_INFO = { name: "become-human", version: "0.4.0" };
 
 export interface ServerOptions {
   rules?: string;
   folder?: string;
   project?: string;
+  lang?: Language;
 }
 
 export function createServer({
   rules = loadRules(),
   folder = dataDir(),
   project = basename(process.cwd()),
+  lang = language(),
 }: ServerOptions = {}): McpServer {
-  const profile = new Profile(join(folder, "profile.md"));
-  const maps = new IdeaMaps(join(folder, "maps"));
+  const labels = labelsFor(lang);
+  const paths = dataPaths(folder);
+  const profile = new Profile(paths.profile, labels.profileTitle);
+  const maps = new IdeaMaps(paths.maps);
+
+  writeIfMissing(paths.myRules, labels.myRulesTemplate);
 
   const instructions = [
     rules,
+    ...personalRules(paths.myRules),
     "## What you already know about your operator",
     formatProfile(profile.list()),
     ...currentMap(maps, project),
@@ -46,10 +57,17 @@ export function createServer({
     async () => text(rules),
   );
 
-  registerProfileTools(server, profile);
+  registerProfileTools(server, profile, labels);
   registerMapTools(server, maps);
+  registerDataTools(server, paths);
 
   return server;
+}
+
+function personalRules(filePath: string): string[] {
+  const content = loadPersonalRules(filePath);
+
+  return content ? ["## Your operator's own rules (they win over the rules above)", content] : [];
 }
 
 function currentMap(maps: IdeaMaps, project: string): string[] {

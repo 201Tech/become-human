@@ -1,8 +1,10 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { formatProfile, Profile } from "../src/profile/profile";
+import { formatProfile, parseProfile, Profile } from "../src/profile/profile";
 import { tempFolder } from "./helpers";
+
+const TITLE = "What I learned about you";
 
 describe("Profile", () => {
   let folder: ReturnType<typeof tempFolder>;
@@ -12,7 +14,7 @@ describe("Profile", () => {
   beforeEach(() => {
     folder = tempFolder();
     filePath = join(folder.path, "profile.md");
-    profile = new Profile(filePath);
+    profile = new Profile(filePath, TITLE);
   });
 
   afterEach(() => folder.remove());
@@ -21,54 +23,76 @@ describe("Profile", () => {
     expect(profile.list()).toEqual([]);
   });
 
-  it("saves facts as readable Markdown", () => {
-    profile.add({ category: "code", fact: "Prefers early returns" });
+  it("groups facts under one heading per topic", () => {
+    profile.add({ topic: "Code", fact: "Uses Jest" });
+    profile.add({ topic: "Tone", fact: "Short answers" });
+    profile.add({ topic: "Code", fact: "Early returns" });
 
     expect(readFileSync(filePath, "utf8")).toBe(
-      "# What I learned about my operator\n\n- **code:** Prefers early returns\n",
+      [
+        "# What I learned about you",
+        "",
+        "## Code",
+        "- Uses Jest",
+        "- Early returns",
+        "",
+        "## Tone",
+        "- Short answers",
+        "",
+      ].join("\n"),
     );
   });
 
-  it("keeps facts in the order they were learned", () => {
-    profile.add({ category: "tone", fact: "Likes short answers" });
-    profile.add({ category: "code", fact: "Uses Jest" });
+  it("numbers facts in the order they appear in the file", () => {
+    profile.add({ topic: "Code", fact: "A" });
+    profile.add({ topic: "Tone", fact: "B" });
+    profile.add({ topic: "Code", fact: "C" });
+
+    expect(profile.list().map((entry) => entry.fact)).toEqual(["A", "C", "B"]);
+  });
+
+  it("keeps topics the human created by hand", () => {
+    writeFileSync(filePath, "# Me\n\n## Personal\n- Has two cats\n");
+    profile.add({ topic: "Code", fact: "Uses Jest" });
 
     expect(profile.list()).toEqual([
-      { category: "tone", fact: "Likes short answers" },
-      { category: "code", fact: "Uses Jest" },
+      { topic: "Personal", fact: "Has two cats" },
+      { topic: "Code", fact: "Uses Jest" },
     ]);
   });
 
-  it("reads facts the human wrote by hand and ignores other lines", () => {
-    writeFileSync(filePath, "# Notes\n\nfree text\n- **workflow:** Squash merges\n");
-
-    expect(profile.list()).toEqual([{ category: "workflow", fact: "Squash merges" }]);
-  });
-
   it("forgets a fact by its number", () => {
-    profile.add({ category: "tone", fact: "A" });
-    profile.add({ category: "tone", fact: "B" });
+    profile.add({ topic: "Tone", fact: "A" });
+    profile.add({ topic: "Tone", fact: "B" });
 
-    expect(profile.forget(1)).toEqual({ category: "tone", fact: "A" });
-    expect(profile.list()).toEqual([{ category: "tone", fact: "B" }]);
+    expect(profile.forget(1)).toEqual({ topic: "Tone", fact: "A" });
+    expect(profile.list()).toEqual([{ topic: "Tone", fact: "B" }]);
   });
 
   it("returns nothing when forgetting a number that does not exist", () => {
-    profile.add({ category: "tone", fact: "A" });
+    profile.add({ topic: "Tone", fact: "A" });
 
     expect(profile.forget(5)).toBeUndefined();
     expect(profile.list()).toHaveLength(1);
   });
 });
 
+describe("parseProfile", () => {
+  it("accepts * bullets and ignores text outside topics", () => {
+    const content = "# Title\n\nintro text\n- loose bullet\n\n## Code\n* Uses Jest\nnote\n";
+
+    expect(parseProfile(content)).toEqual([{ topic: "Code", fact: "Uses Jest" }]);
+  });
+});
+
 describe("formatProfile", () => {
-  it("numbers each fact with its category", () => {
+  it("numbers each fact with its topic", () => {
     const entries = [
-      { category: "code", fact: "Uses Jest" },
-      { category: "tone", fact: "Direct" },
+      { topic: "Code", fact: "Uses Jest" },
+      { topic: "Tone", fact: "Direct" },
     ];
 
-    expect(formatProfile(entries)).toBe("1. [code] Uses Jest\n2. [tone] Direct");
+    expect(formatProfile(entries)).toBe("1. [Code] Uses Jest\n2. [Tone] Direct");
   });
 
   it("invites learning when empty", () => {

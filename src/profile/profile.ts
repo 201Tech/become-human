@@ -1,31 +1,21 @@
 import { readText, writeText } from "../files";
 
-export const CATEGORIES = [
-  "workflow",
-  "communication",
-  "code",
-  "decisions",
-  "learning",
-  "tone",
-] as const;
-
-export type Category = (typeof CATEGORIES)[number];
-
 export interface ProfileEntry {
-  category: string;
+  topic: string;
   fact: string;
 }
 
-const HEADER = "# What I learned about my operator";
-const ENTRY_LINE = /^- \*\*(.+?):\*\* (.+)$/;
+const TOPIC_HEADING = /^##\s+(.+)$/;
+const FACT_BULLET = /^[-*]\s+(.+)$/;
 
 export class Profile {
-  constructor(private readonly filePath: string) {}
+  constructor(
+    private readonly filePath: string,
+    private readonly title: string,
+  ) {}
 
   list(): ProfileEntry[] {
-    const content = readText(this.filePath) ?? "";
-
-    return content.split("\n").flatMap(parseEntry);
+    return parseProfile(readText(this.filePath) ?? "");
   }
 
   add(entry: ProfileEntry): void {
@@ -42,22 +32,39 @@ export class Profile {
   }
 
   private save(entries: ProfileEntry[]): void {
-    const lines = entries.map(({ category, fact }) => `- **${category}:** ${fact}`);
-
-    writeText(this.filePath, [HEADER, "", ...lines, ""].join("\n"));
+    writeText(this.filePath, serializeProfile(this.title, entries));
   }
 }
 
-function parseEntry(line: string): ProfileEntry[] {
-  const match = ENTRY_LINE.exec(line.trim());
+export function parseProfile(content: string): ProfileEntry[] {
+  const entries: ProfileEntry[] = [];
+  let topic: string | undefined;
 
-  return match ? [{ category: match[1], fact: match[2] }] : [];
+  for (const line of content.split("\n").map((current) => current.trim())) {
+    const heading = TOPIC_HEADING.exec(line);
+    const bullet = FACT_BULLET.exec(line);
+
+    if (heading) topic = heading[1];
+    else if (bullet && topic) entries.push({ topic, fact: bullet[1] });
+  }
+
+  return entries;
+}
+
+function serializeProfile(title: string, entries: ProfileEntry[]): string {
+  const topics = [...new Set(entries.map((entry) => entry.topic))];
+
+  const sections = topics.map((topic) => {
+    const facts = entries.filter((entry) => entry.topic === topic).map((entry) => `- ${entry.fact}`);
+
+    return [`## ${topic}`, ...facts].join("\n");
+  });
+
+  return [`# ${title}`, ...sections].join("\n\n") + "\n";
 }
 
 export function formatProfile(entries: ProfileEntry[]): string {
   if (entries.length === 0) return "Nothing learned yet. Learn as you go.";
 
-  return entries
-    .map(({ category, fact }, index) => `${index + 1}. [${category}] ${fact}`)
-    .join("\n");
+  return entries.map(({ topic, fact }, index) => `${index + 1}. [${topic}] ${fact}`).join("\n");
 }

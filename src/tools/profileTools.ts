@@ -1,10 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import { CATEGORIES, formatProfile, Profile } from "../profile/profile";
+import { CATEGORIES, Labels } from "../i18n";
+import { formatProfile, Profile } from "../profile/profile";
 import { text } from "./text";
 
-export function registerProfileTools(server: McpServer, profile: Profile): void {
+export function registerProfileTools(server: McpServer, profile: Profile, labels: Labels): void {
   server.registerTool(
     "remember",
     {
@@ -18,9 +19,11 @@ export function registerProfileTools(server: McpServer, profile: Profile): void 
       },
     },
     async ({ category, fact }) => {
-      profile.add({ category, fact });
+      const topic = labels.categories[category];
 
-      return text(`Learned: [${category}] ${fact}`);
+      profile.add({ topic, fact: fact.trim() });
+
+      return text(`Learned: [${topic}] ${fact.trim()}`);
     },
   );
 

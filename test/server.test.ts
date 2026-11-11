@@ -1,16 +1,20 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
+import { Language } from "../src/i18n";
 import { createServer } from "../src/server";
 import { tempFolder } from "./helpers";
 
 const RULES = "Work with humans.";
 
-async function connect(folder: string): Promise<Client> {
+async function connect(folder: string, lang: Language = "en"): Promise<Client> {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test-client", version: "1.0.0" });
 
-  await createServer({ rules: RULES, folder, project: "demo" }).connect(serverTransport);
+  await createServer({ rules: RULES, folder, project: "demo", lang }).connect(serverTransport);
   await client.connect(clientTransport);
 
   return client;
@@ -36,9 +40,33 @@ describe("BecomeHuman MCP server", () => {
     folder.remove();
   });
 
+  async function nextSession(lang?: Language): Promise<Client> {
+    await client.close();
+    client = await connect(folder.path, lang);
+
+    return client;
+  }
+
   it("sends rules and an empty profile as instructions", () => {
     expect(client.getInstructions()).toBe(
       `${RULES}\n\n## What you already know about your operator\n\nNothing learned yet. Learn as you go.`,
+    );
+  });
+
+  it("creates the personal rules template for the human", () => {
+    const filePath = join(folder.path, "my-rules.md");
+
+    expect(existsSync(filePath)).toBe(true);
+    expect(readFileSync(filePath, "utf8")).toContain("# My rules");
+  });
+
+  it("adds the human's own rules right after the base rules", async () => {
+    writeFileSync(join(folder.path, "my-rules.md"), "# My rules\n\n- Answer in Portuguese.\n");
+
+    const session = await nextSession();
+
+    expect(session.getInstructions()).toContain(
+      `${RULES}\n\n## Your operator's own rules (they win over the rules above)\n\n# My rules`,
     );
   });
 
@@ -53,6 +81,7 @@ describe("BecomeHuman MCP server", () => {
       "map_add",
       "map_resolve",
       "remember",
+      "where_is_my_data",
     ]);
   });
 
@@ -62,42 +91,27 @@ describe("BecomeHuman MCP server", () => {
 
   it("remembers, lists and forgets facts", async () => {
     expect(await call(client, "remember", { category: "code", fact: "Uses Jest" })).toBe(
-      "Learned: [code] Uses Jest",
+      "Learned: [Code] Uses Jest",
     );
-    expect(await call(client, "get_profile")).toBe("1. [code] Uses Jest");
+    expect(await call(client, "get_profile")).toBe("1. [Code] Uses Jest");
     expect(await call(client, "forget", { number: 1 })).toBe("Forgot: Uses Jest");
     expect(await call(client, "forget", { number: 1 })).toBe("There is no fact #1.");
+  });
+
+  it("writes the profile in the configured language", async () => {
+    const session = await nextSession("pt");
+
+    await call(session, "remember", { category: "code", fact: "Usa Jest" });
+
+    expect(readFileSync(join(folder.path, "profile.md"), "utf8")).toBe(
+      "# O que aprendi sobre você\n\n## Código\n- Usa Jest\n",
+    );
   });
 
   it("brings learned facts into the next session", async () => {
     await call(client, "remember", { category: "tone", fact: "Short answers" });
 
-    const nextSession = await connect(folder.path);
-
-    expect(nextSession.getInstructions()).toContain("1. [tone] Short answers");
-
-    await nextSession.close();
-  });
-
-  it("brings the current project's map into the next session", async () => {
-    await call(client, "map_add", { project: "demo", kind: "next", text: "Ship v0.3" });
-
-    const nextSession = await connect(folder.path);
-
-    expect(nextSession.getInstructions()).toContain("## Current project: demo");
-    expect(nextSession.getInstructions()).toContain("- #1 Ship v0.3");
-
-    await nextSession.close();
-  });
-
-  it("leaves other projects' maps out of the instructions", async () => {
-    await call(client, "map_add", { project: "other", kind: "next", text: "Elsewhere" });
-
-    const nextSession = await connect(folder.path);
-
-    expect(nextSession.getInstructions()).not.toContain("Elsewhere");
-
-    await nextSession.close();
+    expect((await nextSession()).getInstructions()).toContain("1. [Tone] Short answers");
   });
 
   it("rejects an unknown category", async () => {
@@ -118,9 +132,33 @@ describe("BecomeHuman MCP server", () => {
     expect(await call(client, "get_map", { project: "demo" })).toContain("Nothing open.");
   });
 
+  it("brings the current project's map into the next session", async () => {
+    await call(client, "map_add", { project: "demo", kind: "next", text: "Ship v0.4" });
+
+    const instructions = (await nextSession()).getInstructions();
+
+    expect(instructions).toContain("## Current project: demo");
+    expect(instructions).toContain("- #1 Ship v0.4");
+  });
+
+  it("leaves other projects' maps out of the instructions", async () => {
+    await call(client, "map_add", { project: "other", kind: "next", text: "Elsewhere" });
+
+    expect((await nextSession()).getInstructions()).not.toContain("Elsewhere");
+  });
+
   it("reports a missing idea as a tool error", async () => {
     const result = await client.callTool({ name: "map_resolve", arguments: { project: "demo", id: 7 } });
 
     expect(result.isError).toBe(true);
+  });
+
+  it("tells where every file lives", async () => {
+    const answer = await call(client, "where_is_my_data");
+
+    expect(answer).toContain(`Folder: ${folder.path}`);
+    expect(answer).toContain(join(folder.path, "profile.md"));
+    expect(answer).toContain(join(folder.path, "my-rules.md"));
+    expect(answer).toContain(join(folder.path, "maps"));
   });
 });

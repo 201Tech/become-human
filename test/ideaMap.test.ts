@@ -1,11 +1,10 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { IdeaMaps } from "../src/ideaMap/ideaMap";
+import { parseMap } from "../src/ideaMap/markdown";
 import { toSlug } from "../src/ideaMap/slug";
 import { tempFolder } from "./helpers";
-
-const NOW = new Date("2026-11-11T10:00:00.000Z");
 
 describe("toSlug", () => {
   it.each([
@@ -22,34 +21,66 @@ describe("toSlug", () => {
   });
 });
 
+describe("parseMap", () => {
+  it("reads lines the human wrote by hand, with or without icon and id", () => {
+    const content = [
+      "# demo",
+      "",
+      "- [ ] ❓ #3 Sync later?",
+      "  - [x] plain child",
+      "some note that is not a node",
+      "- [ ] ➡️ Ship",
+    ].join("\n");
+
+    expect(parseMap("demo", content).nodes).toEqual([
+      { id: 3, kind: "question", text: "Sync later?", parentId: undefined, resolved: false },
+      { id: 4, kind: "idea", text: "plain child", parentId: 3, resolved: true },
+      { id: 5, kind: "next", text: "Ship", parentId: undefined, resolved: false },
+    ]);
+  });
+
+  it("attaches over-indented lines to the deepest valid parent", () => {
+    const content = "- [ ] 💡 #1 Root\n      - [ ] 💡 #2 Deep";
+
+    expect(parseMap("demo", content).nodes[1].parentId).toBe(1);
+  });
+});
+
 describe("IdeaMaps", () => {
   let folder: ReturnType<typeof tempFolder>;
   let maps: IdeaMaps;
 
   beforeEach(() => {
     folder = tempFolder();
-    maps = new IdeaMaps(folder.path, () => NOW);
+    maps = new IdeaMaps(folder.path);
   });
 
   afterEach(() => folder.remove());
 
   it("starts empty for a new project", () => {
-    expect(maps.load("demo")).toEqual({ project: "demo", updatedAt: "never", nodes: [] });
+    expect(maps.load("demo")).toEqual({ project: "demo", nodes: [] });
   });
 
   it("adds nodes with increasing ids", () => {
     const first = maps.add("demo", { kind: "idea", text: "Profiles" });
     const second = maps.add("demo", { kind: "question", text: "Where to store?", parentId: 1 });
 
-    expect(first).toEqual({
-      id: 1,
-      kind: "idea",
-      text: "Profiles",
+    expect(first).toEqual({ id: 1, kind: "idea", text: "Profiles", resolved: false });
+    expect(second).toEqual({
+      id: 2,
+      kind: "question",
+      text: "Where to store?",
+      parentId: 1,
       resolved: false,
-      createdAt: NOW.toISOString(),
     });
-    expect(second.id).toBe(2);
-    expect(second.parentId).toBe(1);
+  });
+
+  it("records decisions as already made", () => {
+    expect(maps.add("demo", { kind: "decision", text: "Use Markdown" }).resolved).toBe(true);
+  });
+
+  it("keeps each node on a single line", () => {
+    expect(maps.add("demo", { kind: "idea", text: "  two\n  lines " }).text).toBe("two lines");
   });
 
   it("rejects a parent that does not exist", () => {
@@ -69,51 +100,66 @@ describe("IdeaMaps", () => {
     expect(() => maps.resolve("demo", 1)).toThrow('Idea #1 does not exist in "demo"');
   });
 
-  it("writes JSON and a readable Markdown map side by side", () => {
-    maps.add("My App", { kind: "idea", text: "Login" });
+  it("writes a single Markdown checklist tree", () => {
+    maps.add("My App", { kind: "idea", text: "Profiles" });
+    maps.add("My App", { kind: "decision", text: "Markdown file", parentId: 1 });
+    maps.add("My App", { kind: "question", text: "Sync later?", parentId: 1 });
+    maps.add("My App", { kind: "next", text: "Ship" });
 
-    expect(existsSync(join(folder.path, "my-app.json"))).toBe(true);
-    expect(readFileSync(join(folder.path, "my-app.md"), "utf8")).toBe(maps.render("My App"));
+    expect(readFileSync(join(folder.path, "my-app.md"), "utf8")).toBe(
+      [
+        "# My App",
+        "",
+        "- [ ] 💡 #1 Profiles",
+        "  - [x] ✅ #2 Markdown file",
+        "  - [ ] ❓ #3 Sync later?",
+        "- [ ] ➡️ #4 Ship",
+        "",
+      ].join("\n"),
+    );
   });
 
-  it("renders a mindmap tree and what is still open", () => {
-    maps.add("demo", { kind: "idea", text: "Profiles (local)" });
-    maps.add("demo", { kind: "decision", text: "Markdown file", parentId: 1 });
-    maps.add("demo", { kind: "question", text: "Sync later?", parentId: 1 });
-    maps.add("demo", { kind: "next", text: "Ship v0.2" });
-    maps.add("demo", { kind: "next", text: "Write README" });
-    maps.resolve("demo", 5);
+  it("keeps what the human edited by hand", () => {
+    maps.add("demo", { kind: "next", text: "Ship" });
+    writeFileSync(maps.filePath("demo"), "# demo\n\n- [x] ➡️ #1 Ship\n- [ ] ❓ Who reviews?\n");
+
+    maps.add("demo", { kind: "idea", text: "Banner" });
+
+    expect(maps.load("demo").nodes.map((node) => [node.id, node.text, node.resolved])).toEqual([
+      [1, "Ship", true],
+      [2, "Who reviews?", false],
+      [3, "Banner", false],
+    ]);
+  });
+
+  it("renders the map followed by what is still open", () => {
+    maps.add("demo", { kind: "question", text: "Sync later?" });
+    maps.add("demo", { kind: "next", text: "Ship" });
+    maps.add("demo", { kind: "next", text: "README" });
+    maps.resolve("demo", 3);
 
     expect(maps.render("demo")).toBe(
       [
-        "# Idea map: demo",
+        "# demo",
         "",
-        `Updated ${NOW.toISOString()}`,
-        "",
-        "```mermaid",
-        "mindmap",
-        "  root((demo))",
-        "    n1[💡 #1 Profiles local]",
-        "      n2[✅ #2 Markdown file]",
-        "      n3[❓ #3 Sync later?]",
-        "    n4[➡️ #4 Ship v0.2]",
-        "    n5[➡️ #5 Write README ✔]",
-        "```",
+        "- [ ] ❓ #1 Sync later?",
+        "- [ ] ➡️ #2 Ship",
+        "- [x] ➡️ #3 README",
         "",
         "## Where we left off",
         "",
         "### Next steps",
         "",
-        "- #4 Ship v0.2",
+        "- #2 Ship",
         "",
         "### Open questions",
         "",
-        "- #3 Sync later?",
+        "- #1 Sync later?",
       ].join("\n"),
     );
   });
 
   it("says when nothing is open", () => {
-    expect(maps.render("demo")).toContain("Nothing open. Fresh start.");
+    expect(maps.render("demo")).toContain("## Where we left off\n\nNothing open.");
   });
 });

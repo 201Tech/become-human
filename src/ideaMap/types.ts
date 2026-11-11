@@ -2,18 +2,23 @@ export const NODE_KINDS = ["idea", "decision", "question", "next"] as const;
 
 export type NodeKind = (typeof NODE_KINDS)[number];
 
+export const ICONS: Record<NodeKind, string> = {
+  idea: "💡",
+  decision: "✅",
+  question: "❓",
+  next: "➡️",
+};
+
 export interface IdeaNode {
   id: number;
   kind: NodeKind;
   text: string;
   parentId?: number;
   resolved: boolean;
-  createdAt: string;
 }
 
 export interface IdeaMapData {
   project: string;
-  updatedAt: string;
   nodes: IdeaNode[];
 }
 
