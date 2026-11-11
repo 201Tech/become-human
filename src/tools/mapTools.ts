@@ -5,7 +5,7 @@ import { IdeaMaps } from "../ideaMap/ideaMap";
 import { NODE_KINDS } from "../ideaMap/types";
 import { text } from "./text";
 
-const project = z.string().min(1).describe("Repository folder name");
+const project = z.string().min(1).describe("Working folder name or short topic name");
 
 export function registerMapTools(server: McpServer, maps: IdeaMaps): void {
   server.registerTool(

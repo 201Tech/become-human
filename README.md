@@ -65,10 +65,11 @@ You only need [Node.js](https://nodejs.org) 20 or newer.
 > **Agent:** Done. Learned: you prefer code without semicolons.
 
 - **It does the work and keeps you in the loop:** what it will do, why, and what changed.
-- **You decide:** it asks before choosing languages, libraries, architecture, tests or docs.
+- **You lead:** it asks before any choice that shapes the work, and your word is final.
+- **It makes your life easier:** it spots what slows you down and offers to fix it, only with your consent.
 - **It teaches:** plain explanations, adapted to how much you already know.
 - **It learns how you work:** your preferences and corrections, so it never asks twice.
-- **It remembers each project:** ideas, decisions, open questions and next steps.
+- **It remembers each project:** code, writing, research or planning: ideas, decisions, questions, next steps.
 - **It is a real partner:** matches your tone, notices when you are tired, admits mistakes,
   disagrees with respect.
 
