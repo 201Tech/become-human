@@ -2,7 +2,7 @@
   "mcpServers": {
     "become-human": {
       "command": "npx",
-      "args": ["-y", "become-human"]
+      "args": ["-y", "become-human@0.6.0"]
     }
   }
 }

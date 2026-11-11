@@ -99,8 +99,9 @@ Lines added by hand may skip the icon and the id: they become ideas with new ids
 ## Releasing (maintainer)
 
 1. Bump the version in `package.json`, `server.json` (both fields) and `plugin/.claude-plugin/plugin.json`.
-2. `npm publish --access public` from a regular terminal (2FA in the browser).
-3. `mcp-publisher publish` to update the [MCP Registry](https://registry.modelcontextprotocol.io).
+2. Pin the same version in `plugin/.mcp.json` (`become-human@x.y.z`), as the directory requires.
+3. `npm publish --access public` from a regular terminal (2FA in the browser).
+4. `mcp-publisher publish` to update the [MCP Registry](https://registry.modelcontextprotocol.io).
 
 | Path | Used by |
 | --- | --- |
