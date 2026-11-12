@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "become-human@0.6.2"
+        "become-human@0.6.3"
       ]
     }
   }
