@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { dataDir } from "./config";
 
 const ART_FILE = join(__dirname, "..", "art", "creation.txt");
-const REPO_URL = "https://github.com/DanielDDHM/become-human";
+const REPO_URL = "https://github.com/201Tech/become-human";
 
 export function banner(folder: string = dataDir()): string {
   return [
