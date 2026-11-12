@@ -3,6 +3,11 @@
 All notable changes to BecomeHuman. Format based on [Keep a Changelog](https://keepachangelog.com),
 versions follow [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Changed
+- New plugin icon: a machine hand and a human hand reaching for each other.
+
 ## [0.6.2] - 2026-11-12
 
 ### Changed
