@@ -1,12 +1,12 @@
 {
   "name": "become-human",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Your AI agent, working with you: learns how you work, remembers each project and lets you lead.",
   "author": {
     "name": "Daniel Machado"
   },
-  "homepage": "https://github.com/DanielDDHM/become-human",
-  "repository": "https://github.com/DanielDDHM/become-human",
+  "homepage": "https://github.com/201Tech/become-human",
+  "repository": "https://github.com/201Tech/become-human",
   "license": "MIT",
   "keywords": [
     "human-in-the-loop",

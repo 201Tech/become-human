@@ -30,7 +30,7 @@ Run it **once per computer**. From then on your agent starts it by itself, every
 **Claude Code**, as a plugin (inside a session):
 
 ```
-/plugin marketplace add DanielDDHM/become-human
+/plugin marketplace add 201Tech/become-human
 /plugin install become-human@become-human
 ```
 

@@ -3,10 +3,15 @@
 All notable changes to BecomeHuman. Format based on [Keep a Changelog](https://keepachangelog.com),
 versions follow [Semantic Versioning](https://semver.org).
 
+## [0.6.2] - 2026-11-12
+
+### Changed
+- Repository moved to the [201Tech](https://github.com/201Tech) organization.
+
 ## [0.6.1] - 2026-11-11
 
 ### Added
-- Claude Code plugin and marketplace: `/plugin marketplace add DanielDDHM/become-human`.
+- Claude Code plugin and marketplace: `/plugin marketplace add 201Tech/become-human`.
 - Listing in the official MCP Registry as `io.github.DanielDDHM/become-human`.
 - Plugin icon.
 - `npm version` keeps every version field in sync (package, registry, plugin).
@@ -70,5 +75,6 @@ First release on npm: `npx -y become-human`.
 ### Added
 - MCP server with human-first rules sent as instructions and the `get_rules` tool.
 
-[0.6.1]: https://github.com/DanielDDHM/become-human/compare/d862cfd...v0.6.1
+[0.6.2]: https://github.com/201Tech/become-human/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/201Tech/become-human/compare/d862cfd...v0.6.1
 [0.6.0]: https://www.npmjs.com/package/become-human/v/0.6.0

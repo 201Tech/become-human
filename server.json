@@ -3,15 +3,15 @@
   "name": "io.github.DanielDDHM/become-human",
   "description": "Your AI agent, working with you: learns how you work, remembers each project, lets you lead.",
   "repository": {
-    "url": "https://github.com/DanielDDHM/become-human",
+    "url": "https://github.com/201Tech/become-human",
     "source": "github"
   },
-  "version": "0.6.1",
+  "version": "0.6.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "become-human",
-      "version": "0.6.1",
+      "version": "0.6.2",
       "transport": {
         "type": "stdio"
       },

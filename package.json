@@ -1,6 +1,6 @@
 {
   "name": "become-human",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "MCP server that makes any agent work with and for humans",
   "license": "MIT",
   "bin": {
@@ -36,13 +36,13 @@
   },
   "author": "Daniel Machado",
   "mcpName": "io.github.DanielDDHM/become-human",
-  "homepage": "https://github.com/DanielDDHM/become-human#readme",
+  "homepage": "https://github.com/201Tech/become-human#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DanielDDHM/become-human.git"
+    "url": "git+https://github.com/201Tech/become-human.git"
   },
   "bugs": {
-    "url": "https://github.com/DanielDDHM/become-human/issues"
+    "url": "https://github.com/201Tech/become-human/issues"
   },
   "keywords": [
     "mcp",
